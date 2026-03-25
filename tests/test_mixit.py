@@ -1,20 +1,29 @@
 import pytest
+import re
+from playwright.sync_api import expect
 
 BASE_URL = "https://www.mixit.cz"
 
 
-def test_mixit_page_loads(page):
+@pytest.fixture
+def home_page(page):
     page.goto(BASE_URL)
-    assert "Mixit" in page.title()
+    try:
+        page.get_by_role("button", name="Souhlasím").click(timeout=2000)
+    except:
+        pass
+    return page
 
 
-def test_mixit_logo_visible(page):
-    page.goto(BASE_URL)
-    logo = page.locator("a[href='/']")
-    assert logo.is_visible()
+def test_mixit_page_loads(home_page):
+    expect(home_page).to_have_title(re.compile("Mixit"))
 
 
-def test_login_button_visible(page):
-    page.goto(BASE_URL)
-    login_button = page.locator("button:has-text('Přihlásit')")
-    assert login_button.is_visible()
+def test_mixit_logo_visible(home_page):
+    logo = home_page.locator("a[href='/']").first
+    expect(logo).to_be_visible()
+
+
+def test_login_button_visible(home_page):
+    login_button = home_page.locator("button").filter(has_text="Přihlásit")
+    expect(login_button.first).to_be_visible()
